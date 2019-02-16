@@ -13,6 +13,7 @@ app.get('/', function(req, res,next) {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+
 io.on('connection', function(client) { 
 	console.log('Client connected...'); 
 	//when the server receives clicked message, do this
@@ -22,6 +23,7 @@ io.on('connection', function(client) {
 		  io.emit('buttonUpdate', clickCount);
     });
 });
+
 
 //start our web server and socket.io server listening
 server.listen(3000, function(){
