@@ -34,10 +34,3 @@ io.on('connection', (socket) => {
     });
 })
 
-
-// app.use(express.static(__dirname + '/public')); 
-// //redirect / to our index.html file
-// app.get('/', function(req, res,next) {  
-//     res.sendFile(__dirname + '/public/index2.html');
-// });
-
