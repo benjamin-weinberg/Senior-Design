@@ -22,9 +22,9 @@
 
 // Example creating a thermocouple instance with software SPI on any three
 // digital IO pins.
-#define MAXDO   3
-#define MAXCS   4
-#define MAXCLK  5
+#define MAXDO   11
+#define MAXCS   12
+#define MAXCLK  13
 
 // initialize the Thermocouple
 Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
@@ -36,6 +36,16 @@ Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
 
 void setup() {
   Serial.begin(9600);
+
+  pinMode(2, OUTPUT);   // least significant
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);  // most significant
+  pinMode(10, INPUT);
  
   while (!Serial) delay(1); // wait for Serial on Leonardo/Zero, etc
   delay(500);
@@ -45,6 +55,20 @@ void loop() {
 
    double c = thermocouple.readCelsius();
    Serial.println(c);
- 
-   delay(1000);
+   bool button = digitalRead(10);
+   while(isnan(c)){     
+     c = thermocouple.readCelsius();
+     for(int i = 0;i<7;i++){
+       digitalWrite(i+3,((i+1)%2));
+     }
+     delay(500);    
+     for(int i = 0;i<7;i++){
+       digitalWrite(i+3,(i%2));
+     }
+     delay(500);
+   }
+   for(int i = 0;i<7;i++){
+     digitalWrite(i+3,bitRead((int)c,i)&&button);
+   }
+ delay(1000);
 }
