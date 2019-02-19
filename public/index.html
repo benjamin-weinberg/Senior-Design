@@ -5,11 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <h1>Temperature Graph</h1>
+        <h3>Temperature Graph</h3>
         <h4>Date: <span id="date"></span></h4>
         <div class="chart-container" style="position: relative; width:75vw; margin: auto;">
             <canvas id="myChart"></canvas>
         </div>
+        <h1><p id="buttonCount">Current Tempature: </p></h1>
+		    <button onmousedown="buttonClicked()" onmouseup="buttonReleased()" onmouseout="buttonReleased()">Click me to display tempature</button>
         <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
@@ -38,6 +40,7 @@
                 options: {}
                 
             });
+
             socket.on('temp', function(data) { //As a temp data is received 
                 console.log(data.temp);
                 document.getElementById('date').innerHTML = data.date; //update the date
@@ -57,6 +60,17 @@
                 }
                 chart.update(); //Update the graph.
             });
+
+            function buttonClicked(){
+			   socket.emit('clicked');
+			 }
+             function buttonReleased(){
+			   socket.emit('released');
+			 }
+			 
+			 socket.on('tempUpdate', function(data){
+				 document.getElementById("buttonCount").innerHTML = 'Current Tempature: ' + data;
+			 });
         </script>
     </body>
     <style>
