@@ -37,38 +37,38 @@ Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
 void setup() {
   Serial.begin(9600);
 
-  pinMode(2, OUTPUT);   // least significant
+  pinMode(2, OUTPUT); // least significant
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(6, OUTPUT);
   pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);  // most significant
-  pinMode(10, INPUT);
+  pinMode(8, OUTPUT); // most significant
+  pinMode(9, OUTPUT); // software button
  
   while (!Serial) delay(1); // wait for Serial on Leonardo/Zero, etc
   delay(500);
 }
 
 void loop() {
-
    double c = thermocouple.readCelsius();
    Serial.println(c);
    bool button = digitalRead(10);
    while(isnan(c)){     
+     digitalWrite(9,1);
      c = thermocouple.readCelsius();
      for(int i = 0;i<7;i++){
-       digitalWrite(i+3,((i+1)%2));
+       digitalWrite(i+2,((i+1)%2));
      }
      delay(500);    
      for(int i = 0;i<7;i++){
-       digitalWrite(i+3,(i%2));
+       digitalWrite(i+2,(i%2));
      }
      delay(500);
    }
+   digitalWrite(9,0);
    for(int i = 0;i<7;i++){
-     digitalWrite(i+3,bitRead((int)c,i)&&button);
+     digitalWrite(i+2,!bitRead((int)c,i));
    }
  delay(1000);
 }
