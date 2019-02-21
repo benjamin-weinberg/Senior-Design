@@ -58,8 +58,6 @@ void loop() {
    bool button = digitalRead(10);
    while(isnan(c)){     
      digitalWrite(9,1);
-     Serial.println(c);
-     c = thermocouple.readCelsius();
      for(int i = 0;i<7;i++){
        digitalWrite(i+2,((i+1)%2));
      }
@@ -68,6 +66,9 @@ void loop() {
        digitalWrite(i+2,(i%2));
      }
      delay(500);
+     c = thermocouple.readCelsius();
+     Serial.println(c);
+     digitalWrite(9,0);
    }
 
    if (Serial.available() > 0) {
