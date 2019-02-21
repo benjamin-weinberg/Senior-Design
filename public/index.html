@@ -7,6 +7,30 @@
     <body>
         <h3>Temperature Graph</h3>
         <h4>Date: <span id="date"></span></h4>
+
+        
+        <!-- Start of Elliot Code -->
+        <form id="CorF">
+        <label for="units"> Units(C/F)</label><br>
+        <input type="text" id ="units"><br>
+        <input type="button" value="Update Units" onClick = "updateUnits()">
+        </form>
+        <form id="updateText">
+        <label for ="phonenumber">Phone # (format: +1xxxxxxxxxx)</label><br>
+        <input type ="text" id ="phonenumber"><br>
+
+        <label for="maxtemp">Max temp </label><br>
+        <input type="text" id="maxtemp"><br>
+
+        <label for="mintemp">Min temp</label><br>
+        <input type="text" id="mintemp"><br>
+
+        <button type="submit">Update Text Notifications</button>
+        </form>
+
+        <!-- End of Elliot Code -->
+
+
         <div class="chart-container" style="position: relative; width:75vw; margin: auto;">
             <canvas id="myChart"></canvas>
         </div>
@@ -67,10 +91,33 @@
              function buttonReleased(){
 			   socket.emit('released');
 			 }
+
+             function updateTexts(number,high,low){
+			   socket.emit('updateTwilio', number, high, low);
+			 }
 			 
 			 socket.on('tempUpdate', function(data){
 				 document.getElementById("buttonCount").innerHTML = 'Current Tempature: ' + data;
 			 });
+
+            function processForm(e) {
+                if (e.preventDefault) e.preventDefault();
+                var phonenumber = document.getElementById("phonenumber").value
+                var maxtemp = document.getElementById("maxtemp").value
+                var mintemp = document.getElementById("mintemp").value
+                document.getElementById("phonenumber").value = "";
+                document.getElementById("maxtemp").value = "";
+                document.getElementById("mintemp").value = "";
+                updateTexts(phonenumber,maxtemp,mintemp)
+                return false;
+            }
+
+            var form = document.getElementById('updateText');
+            if (form.attachEvent) {
+                form.attachEvent("submit", processForm);
+            } else {
+                form.addEventListener("submit", processForm);
+            }
         </script>
     </body>
     <style>

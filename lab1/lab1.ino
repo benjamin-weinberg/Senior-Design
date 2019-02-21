@@ -45,8 +45,10 @@ void setup() {
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT); // most significant
   pinMode(9, OUTPUT); // software button
+
+  digitalWrite(9,LOW);
  
-  while (!Serial) delay(1); // wait for Serial on Leonardo/Zero, etc
+  while (!Serial) delay(1); // wait for Serial
   delay(500);
 }
 
@@ -56,6 +58,7 @@ void loop() {
    bool button = digitalRead(10);
    while(isnan(c)){     
      digitalWrite(9,1);
+     Serial.println(c);
      c = thermocouple.readCelsius();
      for(int i = 0;i<7;i++){
        digitalWrite(i+2,((i+1)%2));
@@ -66,7 +69,14 @@ void loop() {
      }
      delay(500);
    }
-   digitalWrite(9,0);
+
+   if (Serial.available() > 0) {
+      // read the incoming byte:
+      bool output = LOW;
+      int incoming = Serial.read();
+      if(incoming == 49) output = HIGH;
+      digitalWrite(9,output);
+   }
    for(int i = 0;i<7;i++){
      digitalWrite(i+2,!bitRead((int)c,i));
    }
