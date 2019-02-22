@@ -20,16 +20,27 @@ var msgSent = false;
 var sendMsgTo = '+18472748299';
 var upperLimit = 30;
 var lowerLimit = 20;
+var lowerMSG = 'The Tempature is below bounds!';
+var upperMSG = 'The Tempature is above bounds!';
 
 parser.on('data', (temp) => { //Read data
     console.log(temp);
 
-    if ((temp < lowerLimit || temp > upperLimit) && !msgSent) {
-        console.log("should be sending msg")
+    if (temp > upperLimit && !msgSent) {
         msgSent = true;
         client.messages
             .create({
-                body: 'The Tempature is out of bounds!',
+                body: upperMSG,
+                from: '+12242053083',
+                to: sendMsgTo
+            })
+            .then(message => console.log(message.sid));
+    }
+    else if (temp < lowerLimit && !msgSent) {
+        msgSent = true;
+        client.messages
+            .create({
+                body: lowerMSG,
                 from: '+12242053083',
                 to: sendMsgTo
             })
@@ -59,11 +70,12 @@ io.on('connection', (socket) => {
                 port.write('0')
     });
     
-    socket.on('updateTwilio', (number, high,low) => {
+    socket.on('updateTwilio', (number,high,low,highmsg,lowmsg) => {
         sendMsgTo = number;
         upperLimit = high;
         lowerLimit = low;
-        console.log("phone number: " + sendMsgTo)
+        upperMSG = highmsg;
+        lowerMSG = lowmsg;
     });
 })
 

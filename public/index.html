@@ -25,6 +25,12 @@
         <label for="mintemp">Min temp</label><br>
         <input type="text" id="mintemp"><br>
 
+        <label for="lowmsg">Lower Bound Message</label><br>
+        <input type="text" id="lowmsg"><br>
+
+        <label for="highmsg">Upper Bound Coupple</label><br>
+        <input type="text" id="highmsg"><br>
+
         <button type="submit">Update Text Notifications</button>
         </form>
 
@@ -92,8 +98,8 @@
 			   socket.emit('released');
 			 }
 
-             function updateTexts(number,high,low){
-			   socket.emit('updateTwilio', number, high, low);
+             function updateTexts(number,high,low,highmsg,lowmsg){
+			   socket.emit('updateTwilio', number, high, low,highmsg,lowmsg);
 			 }
 			 
 			 socket.on('tempUpdate', function(data){
@@ -108,7 +114,11 @@
                 document.getElementById("phonenumber").value = "";
                 document.getElementById("maxtemp").value = "";
                 document.getElementById("mintemp").value = "";
-                updateTexts(phonenumber,maxtemp,mintemp)
+                var lowmsg = document.getElementById("lowmsg").value
+                document.getElementById("lowmsg").value = "";
+                var highmsg = document.getElementById("highmsg").value
+                document.getElementById("highmsg").value = "";
+                updateTexts(phonenumber,maxtemp,mintemp,highmsg,lowmsg)
                 return false;
             }
 
