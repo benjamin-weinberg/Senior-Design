@@ -66,7 +66,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('released', (data) => {
-                console.log(data)
                 port.write('0')
     });
     

@@ -11,9 +11,11 @@
         
         <!-- Start of Elliot Code -->
         <form id="CorF">
-        <label for="units"> Units(C/F)</label><br>
-        <input type="text" id ="units"><br>
-        <input type="button" value="Update Units" onClick = "updateUnits()">
+                <input type="radio" id='cof' name="cof" value="c"> Celsius<br>
+                <input type="radio" id='coff' name="cof" value="f"> Fahrenheit<br>       
+            <button type="submit">Change C/F</button>
+        </form>
+
         </form>
         <form id="updateText">
         <label for ="phonenumber">Phone # (format: +1xxxxxxxxxx)</label><br>
@@ -46,6 +48,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
         <script>
+            var coff = false;
             var socket = io.connect('http://localhost:3000'); //connect to server
             var ctx = document.getElementById('myChart').getContext('2d');
             var chart = new Chart(ctx, {
@@ -103,7 +106,13 @@
 			 }
 			 
 			 socket.on('tempUpdate', function(data){
-				 document.getElementById("buttonCount").innerHTML = 'Current Tempature: ' + data;
+                if(coff){
+                    data = ((data * (9/5)) + 32).toFixed(2);
+                    document.getElementById("buttonCount").innerHTML = 'Current Tempature: ' + data + "F";
+                }
+                else {
+                    document.getElementById("buttonCount").innerHTML = 'Current Tempature: ' + data + "C";
+                }
 			 });
 
             function processForm(e) {
@@ -127,6 +136,21 @@
                 form.attachEvent("submit", processForm);
             } else {
                 form.addEventListener("submit", processForm);
+            }
+
+            function processForm2(e) {
+                if (e.preventDefault) e.preventDefault();
+                coff = document.getElementById("coff").checked
+                return false;
+            }
+
+
+
+            var form2 = document.getElementById('CorF');
+            if (form2.attachEvent) {
+                form2.attachEvent("submit", processForm2);
+            } else {
+                form2.addEventListener("submit", processForm2);
             }
         </script>
     </body>
