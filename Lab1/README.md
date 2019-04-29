@@ -1,6 +1,7 @@
-#IOT Thermometer
+# IOT Thermometer
 
-Features:
+### Features:
+
 [X] Sends messages when above/below a specific temperature
 [X] Editable Phonenumber and set temps
 [X] Binary Display, 2’s compliment representation
