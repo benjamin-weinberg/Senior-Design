@@ -1,3 +1,4 @@
+#include <RTClib.h>  // RTC library
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <SPI.h>       // this is needed for display
 #include <Adafruit_ILI9341.h>
@@ -16,17 +17,21 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 #define AC 3
 #define HEAT 2
 
+RTC_DS3231 rtc;
 
 int currentPage = 2;
 int previousPage = 0;
 int setTemp = 30;
 int heating = 0;
 int cooling = 0;
-int programable = 0;
+int autoMode = 0;
+int hold = 0;  
+int dayPoint1, dayPoint2, dayPoint3, dayPoint4 = 0; 
 TS_Point p2;
 
 void setup(void) {
-
+  
+  
   pinMode(HEAT, OUTPUT);
   pinMode(AC, OUTPUT);
 
@@ -39,21 +44,50 @@ void setup(void) {
   tft.begin();
 
   if (! ctp.begin(40)) {  // pass in 'sensitivity' coefficient
-    Serial.println("Couldn't start FT6206 touchscreen controller");
+    //Serial.println("Couldn't start FT6206 touchscreen controller");
     while (1);
   }
 
-  Serial.println("Capacitive touchscreen started");
-
+ // Serial.println("Capacitive touchscreen started");
 
   tft.setRotation(0);
   tft.fillScreen(ILI9341_BLACK);
   drawMenu(currentPage);
   updateMenu(currentPage, previousPage);
   drawHomeScreen();
+  
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, lets set the time!");
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
 }
 
 void loop() {
+  // Get time
+  DateTime now = rtc.now();
+  
+  // Display time in serial monitor  
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+    
   // Wait for a touch
   if (! ctp.touched()) {
   }
@@ -89,17 +123,20 @@ void loop() {
         currentPage = 0;
         updateMenu(currentPage, previousPage);
         clearScreen();
+        
       }
       else if(p.x<128){
         previousPage = currentPage;
         currentPage = 1;
         updateMenu(currentPage, previousPage);
         clearScreen();
+        drawSpScreen();
       }
       else if(p.x<192){
         previousPage = currentPage;
         currentPage = 2;
         updateMenu(currentPage, previousPage);
+        clearScreen(); 
         drawHomeScreen();
       }
       else if(p.x<256){
@@ -107,6 +144,7 @@ void loop() {
         currentPage = 3;
         updateMenu(currentPage, previousPage);
         clearScreen();
+        drawSetTemp();
       }
       else if(p.x<320){
         previousPage = currentPage;
@@ -115,12 +153,52 @@ void loop() {
         clearScreen();
       }
     }
+    //listening for touches near HVAC settings
+    if(p.y>180 && p.y <235)
+    {
+      if(p.x < 320 && p.x> 200)
+      {
+        heating = !heating;
+        drawHomeScreen();
+      }
+    }
+    else if(p.y > 120 && p.y<200)
+    {
+      if(p.x<320 && p.x>200)
+      {
+        cooling = !cooling;
+        drawHomeScreen();
+      }
+    }
+    else if(p.y >85 && p.y<120)
+    {
+      if(p.x<320 && p.x>200)
+      {
+        autoMode = !autoMode; 
+        drawHomeScreen();
+      }
+    }
+    else if(p.y >40 && p.y < 85)
+    {
+      if(p.x<320 && p.y < 200)
+      {
+        hold = !hold;
+        drawHomeScreen(); 
+      }
+    }
     else{
-      heating = !heating;
+      /*
+       *  heating = !heating;
+      cooling = !cooling;
+      autoMode = !autoMode; 
       drawHomeScreen();
+       */
+     
     }
   }
-  
+
+  if(cooling == 0)digitalWrite(AC, LOW);
+  else            digitalWrite(AC, HIGH);
   if(heating == 0)digitalWrite(HEAT, LOW);
   else            digitalWrite(HEAT, HIGH);
 }
@@ -146,6 +224,7 @@ void drawMenu(int current){
   tft.drawRect(0, 64*0, 40, 64, 0x5ACB);
   
   tft.drawRect(0, 64*1, 40, 64, 0x5ACB);
+  drawSpIcon();
   
   tft.drawRect(0, 64*2, 40, 64, 0x5ACB);
   drawHomeIcon();
@@ -166,6 +245,71 @@ void drawHomeIcon(void){
   tft.fillRect(5,150,15,20,0x5145);
   tft.fillRect(5,157,12,8,0x79E0);
 }
+void drawSpIcon(void){
+  /*
+   * tft.setRotation(1);
+  tft.setCursor(5,0); 
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println("SP");
+   */
+  //tft.fillRect(10, 120, 13, 8, 0x5145); 
+  tft.setRotation(1);
+  tft.setCursor(100,210);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println("SP");
+  tft.setRotation(0);
+}
+void drawSpScreen(void){
+  tft.setRotation(1);
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println("WD1:XX:XX Temp:XX E:"); 
+  tft.println("WD2:XX:XX Temp:XX E:");
+  tft.println("WD3:XX:XX Temp:XX E:");
+  tft.println("WD4:XX:XX Temp:XX E:");
+  tft.println(" ");
+  tft.println("END1:XX:XX Temp:XX E:");
+  tft.println("END2:XX:XX Temp:XX E:");
+  tft.println("END3:XX:XX Temp:XX E:");
+  tft.println("END4:XX:XX Temp:XX E:");
+  tft.setRotation(0);
+
+  if(dayPoint1 == 0)      tft.fillCircle(220, 275, 7, ILI9341_RED);
+  else                    tft.fillCircle(220, 275, 7, ILI9341_GREEN);            
+
+  if(dayPoint2 == 0)      tft.fillCircle(200, 275, 7, ILI9341_RED);
+  else                    tft.fillCircle(200, 275, 7, ILI9341_GREEN);
+
+  if(dayPoint3 == 0)      tft.fillCircle(180, 275, 7, ILI9341_RED);
+  else                    tft.fillCircle(180, 275, 7, ILI9341_GREEN);
+
+  if(dayPoint4 == 0)      tft.fillCircle(160, 275, 7, ILI9341_RED);
+  else                    tft.fillCircle(160, 275, 7, ILI9341_GREEN);
+
+ 
+  
+  //tft.fillCircle(80, 275, 7, ILI9341_GREEN);
+
+  
+  //tft.fillCircle(80, 310, 7, ILI9341_RED);
+  //tft.fillCircle(80, 310, 7, ILI9341_GREEN);
+  
+}
+
+void drawSetTemp(void){
+  tft.setRotation(1);
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println("Set Temp:" + setTemp);
+  tft.setRotation(0);
+}
 
 void drawHomeScreen(void){
   // print current temp
@@ -178,8 +322,6 @@ void drawHomeScreen(void){
   tft.println(" ");
   tft.println(" ");
   tft.println("        o");
-  tft.setTextSize(5);
-  //TODO: ADD ACTUAL TEMP
   tft.println(" XX F");
 
   // print set temp
@@ -188,7 +330,8 @@ void drawHomeScreen(void){
   tft.setTextSize(2);
   tft.print("Set Temp: ");
   tft.println(setTemp);
-
+  //tft.fillTriangle(180,180,130,135,150,135,ILI9341_WHITE);//
+ 
   // print home page settings
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextWrap(0);
@@ -198,7 +341,6 @@ void drawHomeScreen(void){
   tft.println("               Date: ");
   tft.println("               Time: ");
   tft.println("");
-  tft.println("");
 
 
   //Print heating setting
@@ -206,31 +348,37 @@ void drawHomeScreen(void){
   tft.println("                 Heating: ");
   
   tft.setRotation(0);
-  if(heating == 0)  tft.fillCircle(163, 310, 7, ILI9341_RED);
-  else              tft.fillCircle(163, 310, 7, ILI9341_GREEN);
+  if(heating == 0)  tft.fillCircle(180, 310, 7, ILI9341_RED);
+  else              tft.fillCircle(180, 310, 7, ILI9341_GREEN);
   tft.setRotation(1);
 
   // print cooling setting
   tft.setTextColor(ILI9341_BLUE);
   tft.println("");
-  tft.println("");
   tft.println("                 Cooling: ");
   
   tft.setRotation(0);
-  if(cooling == 0)  tft.fillCircle(115, 310, 7, ILI9341_RED);
-  else              tft.fillCircle(115, 310, 7, ILI9341_GREEN);
+  if(cooling == 0)  tft.fillCircle(145, 310, 7, ILI9341_RED);
+  else              tft.fillCircle(145, 310, 7, ILI9341_GREEN);
   tft.setRotation(1);
 
   // print cooling setting
   tft.setTextColor(ILI9341_MAGENTA);
   tft.println("");
-  tft.println("");
-  tft.println("                 Program: ");
+  tft.println("                 Auto: ");
 
   tft.setRotation(0);
-  if(programable == 0)  tft.fillCircle(68, 310, 7, ILI9341_RED);
-  else                  tft.fillCircle(68, 310, 7, ILI9341_GREEN);
+  if(autoMode == 0)  tft.fillCircle(110, 310, 7, ILI9341_RED);
+  else                  tft.fillCircle(110, 310, 7, ILI9341_GREEN);
   tft.setRotation(1);
+
+  tft.setTextColor(ILI9341_CYAN);
+  tft.println("");
+  tft.println("                 Hold: ");
+
+  tft.setRotation(0);
+  if(hold == 0)     tft.fillCircle(80, 310, 7, ILI9341_RED);
+  else              tft.fillCircle(80, 310, 7, ILI9341_GREEN);
 
   
   tft.setRotation(0);
@@ -239,4 +387,3 @@ void drawHomeScreen(void){
 void clearScreen(){
   tft.fillRect(40,0,200,320,ILI9341_BLACK);
 }
-
