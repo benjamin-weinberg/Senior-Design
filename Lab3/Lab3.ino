@@ -1,3 +1,4 @@
+#include <EEPROM.h>
 #include <DallasTemperature.h>
 #include <OneWire.h>
 #include <RTClib.h>
@@ -34,26 +35,43 @@ float Celcius=0;
 float Fahrenheit=0;
 int oldTemp;
 int newTemp;
-
+int holdTemp; 
 // Graphics variables
 int currentPage = 2;
 int previousPage = 0;
-//int heating = 0;
-//int cooling = 0;
-//int programable = 0;
-//int autoMode = 0;
-//int hold = 0;
+int currentEditPoint; 
+
 bool heating = false;
 bool cooling = false;
 bool programmable = false;
 bool autoMode = false;
 bool hold = false;  
+
+int oldT, oldH, oldM; 
+
+// initialize the set points
+//{temp,hour,min},
+int setPoints[8][3] = {
+{70,12,00},
+{70,12,00},
+{70,12,00},
+{70,12,00},
+{70,12,00},
+{70,12,00},
+{70,12,00},
+{70,12,00},
+};
+
 bool dayPoint1, dayPoint2, dayPoint3, dayPoint4 = false;
 bool endPoint1, endPoint2, endPoint3, endPoint4 = false; 
 TS_Point p2;
 
 int newSetTemp = 70;
 int oldSetTemp = 70;
+
+
+
+
 
 void setup(void) {
 
@@ -106,7 +124,6 @@ void setup(void) {
   lastOneSec = (int)(last.second() - lastTenSec*10);
     
 }
-
 void loop() {
 
   // Get temperature
@@ -202,6 +219,10 @@ void loop() {
         if(p.x < 320 && p.x> 200)
         {
           heating = !heating;
+          if(cooling)
+          {
+            cooling = !cooling;
+          }
           drawHomeScreen();
         }
       }
@@ -210,6 +231,10 @@ void loop() {
         if(p.x<320 && p.x>200)
         {
           cooling = !cooling;
+          if(heating)
+          {
+            heating = !heating; 
+          }
           drawHomeScreen();
         }
       }
@@ -260,6 +285,637 @@ void loop() {
           //}
         }
     }
+    else if(currentPage == 1)
+    {
+      //listen for touches on enable buttons
+      if(p.x>260 && p.x< 280)
+      {
+        if(p.y>184 && p.y < 224)
+        {
+          dayPoint1 = !dayPoint1; 
+          drawSpScreen();
+        }
+        else if(p.y >168 && p.y < 208)
+        {
+          dayPoint2 = !dayPoint2; 
+          drawSpScreen();
+        }
+        else if(p.y > 151 && p.y < 191)
+        {
+          dayPoint3 = !dayPoint3;
+          drawSpScreen();
+        }
+        else if(p.y > 134 && p.y < 184)
+        {
+          dayPoint4 = !dayPoint4;
+          drawSpScreen(); 
+        }
+        else if(p.y > 102 && p.y<142)
+        {
+          endPoint1 = !endPoint1;
+          drawSpScreen();
+        }
+        else if(p.y > 86 && p.y< 126)
+        {
+          endPoint2 = !endPoint2;
+          drawSpScreen();
+        }
+        else if(p.y> 70 && p.y< 110)
+        {
+          endPoint3 = !endPoint3;
+          drawSpScreen();
+        }
+        else if(p.y> 54 && p.y < 94)
+        {
+         endPoint4 = !endPoint4;
+         drawSpScreen(); 
+        }
+        else
+        {
+          //do nothing
+        }
+      }
+        //listen for set point touches
+        if(p.x > 1 && p.x < 200)
+        {
+          //weekday1
+            if(p.y>184 && p.y < 224)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+              currentEditPoint = 1; 
+            }
+            //weekday2
+            else if(p.y >168 && p.y < 208)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+              currentEditPoint = 2; 
+            }
+            //weekday3
+            else if(p.y > 151 && p.y < 191)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+              currentEditPoint = 3; 
+            }
+            //weekday4
+            else if(p.y > 134 && p.y < 184)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+              currentEditPoint = 4;
+            }
+            //weekend1
+            else if(p.y > 102 && p.y<142)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+              currentEditPoint = 5; 
+            }
+            //weekend2
+            else if(p.y > 86 && p.y< 126)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+              currentEditPoint = 6; 
+            }
+            //weekend3
+            else if(p.y> 70 && p.y< 110)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+              currentEditPoint = 7; 
+            }
+            //weekend4
+            else if(p.y> 54 && p.y < 94)
+            {
+              previousPage = currentPage;
+              currentPage = 0;
+              clearScreen();
+              drawMenu(currentPage, previousPage);
+              drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+              currentEditPoint = 8;
+            }
+            else
+            {
+              //do nothing
+            }
+        }
+    }
+   
+    //listen for actions on arrows for set point temp
+    else if(currentPage == 0)
+    {
+      if(p.x>=175 && p.x <225 && p.y > 150 && p.y < 175)//115 235
+        {
+        if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][0]; 
+          setPoints[0][0]++;
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][0];
+          setPoints[1][0]++;
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][0];
+          setPoints[2][0]++;
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][0];
+          setPoints[3][0]++;
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[3][0];
+          setPoints[3][0]++;
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[4][0];
+          setPoints[4][0]++;
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[5][0];
+          setPoints[5][0]++;
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[6][0];
+          setPoints[6][0]++;
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==8)
+        {
+          oldSetTemp = setPoints[7][0];
+          setPoints[7][0]++;
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+           
+      }
+      else if(p.x>=175 && p.x <225 && p.y > 115 && p.y < 170)
+        {
+         
+          if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][0]; 
+          setPoints[0][0]--;
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][0];
+          setPoints[1][0]--;
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][0];
+          setPoints[2][0]--;
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][0];
+          setPoints[3][0]--;
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[3][0];
+          setPoints[3][0]--;
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[4][0];
+          setPoints[4][0]--;
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[5][0];
+          setPoints[5][0]++;
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[6][0];
+          setPoints[6][0]--;
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==8)
+        {
+          oldSetTemp = setPoints[7][0];
+          setPoints[7][0]--;
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+        }
+
+         /**
+     * tft.fillTriangle(200,75, 175,90, 225,90,ILI9341_WHITE);
+  tft.fillTriangle(200,115, 175,100, 225,100,ILI9341_WHITE);
+
+  
+  tft.fillTriangle(200, 145, 175,160, 225,160,ILI9341_WHITE);
+  tft.fillTriangle(200, 185, 175, 170, 225, 170, ILI9341_WHITE);
+
+  tft.fillTriangle(260, 145, 235,160, 285, 160,ILI9341_WHITE);
+  tft.fillTriangle(260, 185, 235,170, 285, 170, ILI9341_WHITE);
+     */
+        //listen for action on hour up button
+        else if(p.x>=175 && p.x <225 && p.y > 85 && p.y < 115)
+        {
+         
+          if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][1]; 
+          setPoints[0][1]++;
+          if(setPoints[0][1]> 23)
+          {
+            setPoints[0][1] = 0; 
+          }
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][1]; 
+          setPoints[1][1]++;
+          if(setPoints[1][1]> 23)
+          {
+            setPoints[1][1] = 0; 
+          }
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][1]; 
+          setPoints[2][1]++;
+          if(setPoints[2][1]> 23)
+          {
+            setPoints[2][1] = 0; 
+          }
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][1]; 
+          setPoints[3][1]++;
+          if(setPoints[3][1]> 23)
+          {
+            setPoints[3][1] = 0; 
+          }
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[4][1];
+          setPoints[4][1]++;
+          if(setPoints[4][1] > 23)
+          {
+            setPoints[4][1] = 0; 
+          }
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[5][1];
+          setPoints[5][1]++;
+          if(setPoints[5][1] > 23)
+          {
+            setPoints[5][1] = 0; 
+          }
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[6][1];
+          setPoints[6][1]++;
+          if(setPoints[6][1] > 23)
+          {
+            setPoints[6][1] = 0; 
+          }
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[7][1];
+          setPoints[7][1]++;
+          if(setPoints[7][1] > 23)
+          {
+            setPoints[7][1] = 0; 
+          }
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+        }
+        //listen for action on hour down button
+        else if(p.x>=175 && p.x <225 && p.y > 45 && p.y < 70)
+        {
+         
+          if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][1]; 
+          setPoints[0][1]--;
+          if(setPoints[0][1]< 0)
+          {
+            setPoints[0][1] = 23; 
+          }
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][1]; 
+          setPoints[1][1]--;
+          if(setPoints[1][1]<0)
+          {
+            setPoints[1][1] = 23; 
+          }
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][1]; 
+          setPoints[2][1]--;
+          if(setPoints[2][1] < 0)
+          {
+            setPoints[2][1] = 23; 
+          }
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][1]; 
+          setPoints[3][1]--;
+          if(setPoints[3][1]< 0)
+          {
+            setPoints[3][1] = 23; 
+          }
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[4][1];
+          setPoints[4][1]--;
+          if(setPoints[4][1] < 0)
+          {
+            setPoints[4][1] = 23; 
+          }
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[5][1];
+          setPoints[5][1]--;
+          if(setPoints[5][1] < 0)
+          {
+            setPoints[5][1] = 23; 
+          }
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[6][1];
+          setPoints[6][1]--;
+          if(setPoints[6][1] < 0)
+          {
+            setPoints[6][1] = 23; 
+          }
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[7][1];
+          setPoints[7][1]--;
+          if(setPoints[7][1] < 0)
+          {
+            setPoints[7][1] = 23; 
+          }
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+        }
+        //listen for action on min up button
+        else if(p.x>=225 && p.x <265 && p.y > 85 && p.y < 115)
+        {
+         
+          if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][2]; 
+          setPoints[0][2] += 30;
+          if(setPoints[0][2]> 59)
+          {
+            setPoints[0][2] = 0; 
+          }
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][2]; 
+          setPoints[1][2]+=30;
+          if(setPoints[1][2]> 59)
+          {
+            setPoints[1][2] = 0; 
+          }
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][2]; 
+          setPoints[2][2]+=30;
+          if(setPoints[2][2]> 59)
+          {
+            setPoints[2][2] = 0; 
+          }
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][2]; 
+          setPoints[3][2]+=30;
+          if(setPoints[3][2]> 59)
+          {
+            setPoints[3][2] = 0; 
+          }
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[4][2];
+          setPoints[4][2]+=30;
+          if(setPoints[4][2] > 59)
+          {
+            setPoints[4][2] = 0; 
+          }
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[5][2];
+          setPoints[5][2]+=30;
+          if(setPoints[5][2] > 59)
+          {
+            setPoints[5][2] = 0; 
+          }
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[6][2];
+          setPoints[6][2]+=30;
+          if(setPoints[6][2] > 59)
+          {
+            setPoints[6][2] = 0; 
+          }
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[7][2];
+          setPoints[7][2]+=30;
+          if(setPoints[7][2] > 59)
+          {
+            setPoints[7][2] = 0; 
+          }
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+        }
+        //listen for action on min down button
+        else if(p.x>=225 && p.x <265 && p.y > 45 && p.y < 70)
+        {
+         
+          if(currentEditPoint == 0)
+        {
+          oldSetTemp = setPoints[0][2]; 
+          setPoints[0][2]-=30;
+          if(setPoints[0][2]< 0)
+          {
+            setPoints[0][2] = 30; 
+          }
+          drawSetPoint(setPoints[0][0], setPoints[0][1], setPoints[0][2]);
+        }
+        else if(currentEditPoint == 1)
+        {
+          oldSetTemp = setPoints[1][2]; 
+          setPoints[1][2]-=30;
+          if(setPoints[1][2]<0)
+          {
+            setPoints[1][2] = 30; 
+          }
+          drawSetPoint(setPoints[1][0], setPoints[1][1], setPoints[1][2]);
+        }
+        else if(currentEditPoint == 2)
+        {
+          oldSetTemp = setPoints[2][2]; 
+          setPoints[2][2]-=30;
+          if(setPoints[2][2] < 0)
+          {
+            setPoints[2][2] = 30; 
+          }
+          drawSetPoint(setPoints[2][0], setPoints[2][1], setPoints[2][2]);
+        }
+        else if(currentEditPoint ==3)
+        {
+          oldSetTemp = setPoints[3][2]; 
+          setPoints[3][2]-=30;
+          if(setPoints[3][2]< 0)
+          {
+            setPoints[3][2] = 30; 
+          }
+          drawSetPoint(setPoints[3][0], setPoints[3][1], setPoints[3][2]);
+        } 
+        else if(currentEditPoint ==4)
+        {
+          oldSetTemp = setPoints[4][2];
+          setPoints[4][2]-=30;
+          if(setPoints[4][2] < 0)
+          {
+            setPoints[4][2] = 30; 
+          }
+          drawSetPoint(setPoints[4][0], setPoints[4][1], setPoints[4][2]);
+        } 
+        else if(currentEditPoint ==5)
+        {
+          oldSetTemp = setPoints[5][2];
+          setPoints[5][2]-=30;
+          if(setPoints[5][2] < 0)
+          {
+            setPoints[5][2] = 30; 
+          }
+          drawSetPoint(setPoints[5][0], setPoints[5][1], setPoints[5][2]);
+        } 
+        else if(currentEditPoint ==6)
+        {
+          oldSetTemp = setPoints[6][2];
+          setPoints[6][2]-=30;
+          if(setPoints[6][2]< 0)
+          {
+            setPoints[6][2] = 30; 
+          }
+          drawSetPoint(setPoints[6][0], setPoints[6][1], setPoints[6][2]);
+        } 
+        else if(currentEditPoint ==7)
+        {
+          oldSetTemp = setPoints[7][2];
+          setPoints[7][2]-=30;
+          if(setPoints[7][2] < 0)
+          {
+            setPoints[7][2] = 30; 
+          }
+          drawSetPoint(setPoints[7][0], setPoints[7][1], setPoints[7][2]);
+        } 
+        else{
+          //do nothing
+        }
+        }
+    }
+    
     else{
 //      heating = !heating;
 //      drawHomeScreen();
@@ -272,78 +928,78 @@ void loop() {
   else            digitalWrite(HEAT, HIGH);
 }
 
-/*
-void drawHomeScreen(void){
-  // make the color selection boxes
-  tft.fillRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_RED);
-  tft.fillRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, ILI9341_YELLOW);
-  tft.fillRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, ILI9341_GREEN);
-  tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, ILI9341_CYAN);
-  tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, ILI9341_BLUE);
-  tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, ILI9341_MAGENTA);
- 
-  // select the current color 'red'
-  tft.drawRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-  currentcolor = ILI9341_RED;
-}
-*/
+
 
 void drawSpScreen(void){
+
+  char buf[20];
+ 
+  
+  
   tft.setRotation(1);
   tft.setCursor(0, 45);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
-  //tft.println("\n\n ");
-  tft.print("WeekDay1: XX:XX XX");
+
+  
+  sprintf(buf, "WeekDay1: %02d:%02d %02d", setPoints[0][1], setPoints[0][2], setPoints[0][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekDay2: XX:XX XX");
+  sprintf(buf, "WeekDay2: %02d:%02d %02d", setPoints[1][1], setPoints[1][2], setPoints[1][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekDay3: XX:XX XX");
+  sprintf(buf, "WeekDay3: %02d:%02d %02d", setPoints[2][1], setPoints[2][2], setPoints[2][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekDay4: XX:XX XX");
+  sprintf(buf, "WeekDay4: %02d:%02d %02d", setPoints[3][1], setPoints[3][2], setPoints[3][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
   tft.println(" ");
-  tft.print("WeekEnd1: XX:XX XX");
+  sprintf(buf, "WeekEnd1: %02d:%02d %02d", setPoints[4][1], setPoints[4][2], setPoints[4][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekEnd2: XX:XX XX");
+  sprintf(buf, "WeekEnd2: %02d:%02d %02d", setPoints[5][1], setPoints[5][2], setPoints[5][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekEnd3: XX:XX XX");
+  sprintf(buf, "WeekEnd3: %02d:%02d %02d", setPoints[6][1], setPoints[6][2], setPoints[6][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
-  tft.print("WeekEnd4: XX:XX XX");
+  sprintf(buf, "WeekEnd4: %02d:%02d %02d", setPoints[7][1], setPoints[7][2], setPoints[7][0]);
+  tft.print(buf);
   tft.print((char)167);
   tft.print("F\n"); 
   tft.setRotation(0);
 
-  if(!dayPoint1)      tft.fillCircle(190, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(190, 275, 6, ILI9341_GREEN);            
+  if(!dayPoint1)      tft.fillRect(184, 260, 10, 40, ILI9341_RED);
+  else                tft.fillRect(184, 260, 10, 40, ILI9341_GREEN);            
 
-  if(!dayPoint2)      tft.fillCircle(174, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(174, 275, 6, ILI9341_GREEN);
+  if(!dayPoint2)      tft.fillRect(168,260 , 10, 40, ILI9341_RED);
+  else                tft.fillRect(168, 260, 10, 40, ILI9341_GREEN);
 
-  if(!dayPoint3)      tft.fillCircle(157, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(157, 275, 6, ILI9341_GREEN);
+  if(!dayPoint3)      tft.fillRect(151, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(151, 260, 10,40, ILI9341_GREEN);
 
-  if(!dayPoint4)      tft.fillCircle(140, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(140, 275, 6, ILI9341_GREEN);
+  if(!dayPoint4)      tft.fillRect(134, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(134, 260, 10,40, ILI9341_GREEN);
 
-  if(!endPoint1)      tft.fillCircle(108, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(108, 275, 6, ILI9341_GREEN);            
+  if(!endPoint1)      tft.fillRect(102, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(102, 260, 10,40,  ILI9341_GREEN);            
 
-  if(!endPoint2)      tft.fillCircle(92, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(92, 275, 6, ILI9341_GREEN);
+  if(!endPoint2)      tft.fillRect(86, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(86, 260, 10,40, ILI9341_GREEN);
 
-  if(!endPoint3)      tft.fillCircle(76, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(76, 275, 6, ILI9341_GREEN);
+  if(!endPoint3)      tft.fillRect(70, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(70, 260, 10,40, ILI9341_GREEN);
 
-  if(!endPoint4)      tft.fillCircle(60, 275, 6, ILI9341_RED);
-  else                tft.fillCircle(60, 275, 6, ILI9341_GREEN);
+  if(!endPoint4)      tft.fillRect(54, 260, 10,40, ILI9341_RED);
+  else                tft.fillRect(54, 260, 10,40, ILI9341_GREEN);
 
  
   
@@ -396,6 +1052,104 @@ void drawSetTemp(void){
   tft.fillTriangle(200,75, 175,90, 225,90,ILI9341_WHITE);
   tft.fillTriangle(200,115, 175,100, 225,100,ILI9341_WHITE);
 }
+
+void drawSetPoint(int pointTemp, int hours, int minutes){
+  
+  int spTemp = pointTemp;
+  int timeHours = hours;
+  int timeMinutes = minutes;
+
+  
+  tft.setRotation(1);
+  tft.setTextWrap(0);
+  tft.setTextSize(2);
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.print(" Set Point: ");
+  
+  // erase old temp
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.setTextSize(5);
+  tft.print(" ");
+  tft.print(oldT);
+  tft.print("   ");
+  
+  // print new temp  
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println("        o");
+  tft.setTextSize(5);
+  tft.print(" ");
+  tft.print(spTemp);
+  tft.print(" F ");
+  //erase old time
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_BLACK);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.setTextSize(5);
+  char buff[10];
+  sprintf(buff,"%02d:%02d", oldH,oldM);
+  tft.println(buff);
+
+  tft.setCursor(5, 0);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.println(" ");
+  tft.setTextSize(5);
+  sprintf(buff,"%02d:%02d", timeHours,timeMinutes);
+  tft.println(buff);
+  
+   
+  // print arrows
+  //               apex   b l    b r
+  tft.fillTriangle(200,75, 175,90, 225,90,ILI9341_WHITE);
+  tft.fillTriangle(200,115, 175,100, 225,100,ILI9341_WHITE);
+
+  
+  tft.fillTriangle(200, 145, 175,160, 225,160,ILI9341_WHITE);
+  tft.fillTriangle(200, 185, 175, 170, 225, 170, ILI9341_WHITE);
+
+  tft.fillTriangle(260, 145, 235,160, 285, 160,ILI9341_WHITE);
+  tft.fillTriangle(260, 185, 235,170, 285, 170, ILI9341_WHITE);
+
+  oldT = spTemp; 
+  oldH = timeHours; 
+  oldM = timeMinutes;
+  storeSetPoints();
+  }
+
+
 
 void drawClock(){
   now = rtc.now();
@@ -515,7 +1269,7 @@ void drawTemp(){
   tft.println(" ");
   tft.println(" ");
   tft.println(" ");
-  tft.println(" ");
+  tft.println(" "); 
   tft.println("         ");
   tft.setTextSize(5);
   tft.print(" ");
@@ -630,7 +1384,19 @@ void drawHomeScreen(void){
 //  
 
 // Elliot's
-
+  if(autoMode)
+  {
+    if(newSetTemp < newTemp)
+    {
+      cooling = true; 
+      heating = false; 
+    }
+    else if(newSetTemp > newTemp)
+    {
+      cooling = false; 
+      heating = true; 
+    }
+  }
   tft.setTextWrap(0);
   tft.setCursor(0, 5);
   tft.setTextSize(2);
@@ -686,4 +1452,34 @@ void clearScreen(){
 void clearScreen(){
   tft.setRotation(1);
   tft.fillRect(0,0,320,240,ILI9341_BLACK);
+}
+
+//// store set points to EEPROM
+//void storeSetPoint(int editPoint){
+//  int counter = 3*editPoint;
+//  EEPROM.update(counter, setPoints[editPoint][0]);
+//  EEPROM.update(counter+1, setPoints[editPoint][1]);
+//  EEPROM.update(counter+2, setPoints[editPoint][2]);
+//}
+
+// update EEPROM
+void storeSetPoints(void) {
+  int address = 0;
+  for(int i=0; i<8; i++){
+    for(int j=0; j<3; j++){
+      EEPROM.update(address, setPoints[i][j]);
+      address++;
+    }
+  }
+}
+
+// load previously stored set points
+void loadSetPoints(void) {
+  int address = 0;
+  for(int i=0; i<8; i++){
+    for(int j=0; j<3; j++){
+      setPoints[i][j] = EEPROM.read(address);
+      address++;
+    }
+  }
 }
